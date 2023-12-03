@@ -1,0 +1,21 @@
+<html>
+    <head>
+
+    </head>
+    <body>
+    {{ locale }}
+    {{ 'Example message'|trans }}
+        {% if app.user %}
+            email: {{ app.user.email }}
+        {% endif %}
+    <script>
+        // fetch('http://localhost:8080/auth', {
+        //     headers: {
+        //         'Authorization': 'Bearer root'
+        //     }
+        // })
+        //     .then(response => response.text())
+        //     .then(text => console.log(text))
+    </script>
+    </body>
+</html>

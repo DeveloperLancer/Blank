@@ -1,0 +1,89 @@
+security:
+    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+    providers:
+        # used to reload user from session & other features (e.g. switch_user)
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        api:
+            lazy: true
+            provider: app_user_provider
+            pattern: ^/api
+            login_throttling:
+                max_attempts: 5
+                interval: '5 minute'
+            access_token:
+                token_handler: App\Security\AccessTokenHandler
+            logout:
+                path: app_logout #todo dzialac bedzie skoro to /logout zamiast /api/logout
+                # where to redirect after logout
+                # target: app_any_route
+            json_login:
+                success_handler: App\Security\AuthenticationSuccessHandler
+                check_path: api_login
+
+            two_factor:
+                prepare_on_login: true
+                prepare_on_access_denied: true
+#                auth_form_path: app_login    # The route name you have used in the routes.yaml
+                check_path: 2fa_login_check  # The route name you have used in the routes.yaml
+                auth_code_parameter_name: auth_code  # Name of the parameter for the two-factor authentication code
+                authentication_required_handler: App\Security\TwoFactorAuthenticationHandler
+                success_handler: App\Security\TwoFactorAuthenticationHandler
+                failure_handler: App\Security\TwoFactorAuthenticationHandler
+
+            # activate different ways to authenticate
+            # https://symfony.com/doc/current/security.html#the-firewall
+
+            # https://symfony.com/doc/current/security/impersonating_user.html
+            # switch_user: true
+        main:
+            entry_point: form_login
+            lazy: true
+            provider: app_user_provider
+            pattern: ^/
+            login_throttling:
+                max_attempts: 5
+                interval: '5 minute'
+            logout:
+                path: app_logout
+            custom_authenticators:
+                - App\Security\DiscordAuthenticator
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                enable_csrf: true
+            two_factor:
+                enable_csrf: true
+                csrf_parameter: _csrf_token
+                csrf_token_id: two_factor
+                auth_code_parameter_name: _auth_code  # Name of the parameter for the two-factor authentication code
+                auth_form_path: 2fa_login    # The route name you have used in the routes.yaml
+                check_path: 2fa_login_check  # The route name you have used in the routes.yaml
+    # Easy way to control access for large sections of your site
+    # Note: Only the *first* access control that matches will be used
+    access_control:
+        - { path: 2fa_login_check, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
+        # - { path: ^/admin, roles: ROLE_ADMIN }
+        # - { path: ^/profile, roles: ROLE_USER }
+
+when@test:
+    security:
+        password_hashers:
+            # By default, password hashers are resource intensive and take time. This is
+            # important to generate secure password hashes. In tests however, secure hashes
+            # are not important, waste resources and increase test times. The following
+            # reduces the work factor to the lowest possible values.
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4 # Lowest possible value for bcrypt
+                time_cost: 3 # Lowest possible value for argon
+                memory_cost: 10 # Lowest possible value for argon

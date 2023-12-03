@@ -1,0 +1,15 @@
+# See the configuration reference at https://symfony.com/bundles/SchebTwoFactorBundle/6.x/configuration.html
+scheb_two_factor:
+    google:
+        enabled: true                  # If Google Authenticator should be enabled, default false
+        issuer: Blank                  # Issuer name used in QR code
+        digits: 6                      # Number of digits in authentication code
+        window: 1                      # Depends on the version of Spomky-Labs/otphp used:
+    email:
+        enabled: true
+        sender_email: kubuspl@onet.eu
+        sender_name: Blank
+        digits: 6
+    security_tokens:
+        - Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken
+        - Symfony\Component\Security\Http\Authenticator\Token\PostAuthenticationToken

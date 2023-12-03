@@ -1,0 +1,94 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Log in!{% endblock %}
+
+{% block body %}
+{#    <form id="formLogin">#}
+    {% if is_granted('IS_AUTHENTICATED_2FA_IN_PROGRESS') %}
+{#        {% include('@SchebTwoFactor/Authentication/form.html.twig') %}#}
+        <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+        <label for="username">Code</label>
+        <input type="text" value="" name="auth_code" id="auth_code" class="form-control"  required autofocus>
+
+        <button class="btn btn-lg btn-primary" onclick="auth_code()" type="submit">
+            Sign in
+        </button>
+        {#    </form>#}
+
+        <script>
+            function auth_code()
+            {
+                let auth_code = document.getElementById('auth_code').value;
+
+                fetch("http://localhost:8080{{ path('2fa_login_check') }}", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        'auth_code': auth_code,
+                    }),
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8"
+                    }
+                })
+                    .then((response) => response.json())
+                    .then((json) => console.log(json));
+            }
+        </script>
+    {% else %}
+        {% if error %}
+            <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+        {% endif %}
+
+        {% if app.user %}
+            <div class="mb-3">
+                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
+            </div>
+        {% endif %}
+
+        <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+        <label for="username">Email</label>
+        <input type="email" value="{{ last_username }}" name="username" id="username" class="form-control" autocomplete="email" required autofocus>
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" class="form-control" autocomplete="current-password" required>
+
+{#        <input type="hidden" name="_csrf_token"#}
+{#               value="{{ csrf_token('authenticate') }}"#}
+{#        >#}
+
+        {#
+            Uncomment this section and add a remember_me option below your firewall to activate remember me functionality.
+            See https://symfony.com/doc/current/security/remember_me.html
+
+            <div class="checkbox mb-3">
+                <label>
+                    <input type="checkbox" name="_remember_me"> Remember me
+                </label>
+            </div>
+        #}
+
+        <button class="btn btn-lg btn-primary" onclick="login()" type="submit">
+            Sign in
+        </button>
+{#    </form>#}
+
+    <script>
+        function login()
+        {
+            let username = document.getElementById('username').value;
+            let password = document.getElementById('password').value;
+
+            fetch("http://localhost:8080{{ path('api_login') }}", {
+                method: "POST",
+                body: JSON.stringify({
+                    'username': username,
+                    'password': password
+                }),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8"
+                }
+            })
+                .then((response) => response.json())
+                .then((json) => console.log(json));
+        }
+    </script>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Log in!{% endblock %}
+
+{% block body %}
+    {% if is_granted('IS_AUTHENTICATED_2FA_IN_PROGRESS') %}
+{#        {{ availableTwoFactorProviders }}#}
+        {% if availableTwoFactorProviders|length > 1 %}
+            <p>{{ "choose_provider"|trans({}, 'SchebTwoFactorBundle') }}:
+                {% for provider in availableTwoFactorProviders %}
+                    <a href="{{ path("app_login", {"preferProvider": provider}) }}">{{ provider }}</a>
+                {% endfor %}
+            </p>
+        {% endif %}
+
+        <p class="label"><label for="_auth_code">{{ "auth_code"|trans({}, 'SchebTwoFactorBundle') }} {{ twoFactorProvider }}:</label></p>
+
+        <form class="form" action="{{ checkPathUrl ? checkPathUrl: path(checkPathRoute) }}" method="post">
+            <p class="widget">
+                <input
+                        id="_auth_code"
+                        type="text"
+                        name="{{ authCodeParameterName }}"
+                        autocomplete="one-time-code"
+                        autofocus
+                        {#
+                        https://www.twilio.com/blog/html-attributes-two-factor-authentication-autocomplete
+                        If your 2fa methods are using numeric codes only, add these attributes for better user experience:
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        #}
+                />
+            </p>
+
+{#            {% if displayTrustedOption %}#}
+{#                <p class="widget"><label for="_trusted"><input id="_trusted" type="checkbox" name="{{ trustedParameterName }}" /> {{ "trusted"|trans({}, 'SchebTwoFactorBundle') }}</label></p>#}
+{#            {% endif %}#}
+            {% if isCsrfProtectionEnabled %}
+                <input type="hidden" name="{{ csrfParameterName }}" value="{{ csrf_token(csrfTokenId) }}">
+            {% endif %}
+            <p class="submit"><input type="submit" value="{{ "login"|trans({}, 'SchebTwoFactorBundle') }}" /></p>
+        </form>
+    {% else %}
+        <form method="post">
+            {% if error %}
+                <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+            {% endif %}
+
+            {% if app.user %}
+                <div class="mb-3">
+                    You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
+                </div>
+
+            {% else %}
+                <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+                <label for="username">Email</label>
+                <input type="email" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="email" required autofocus>
+                <label for="password">Password</label>
+                <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
+
+                <input type="hidden" name="_csrf_token"
+                       value="{{ csrf_token('authenticate') }}"
+                >
+
+                {#
+                Uncomment this section and add a remember_me option below your firewall to activate remember me functionality.
+                See https://symfony.com/doc/current/security/remember_me.html
+
+                <div class="checkbox mb-3">
+                    <label>
+                        <input type="checkbox" name="_remember_me"> Remember me
+                    </label>
+                </div>
+                #}
+
+                <button class="btn btn-lg btn-primary" type="submit">
+                    Sign in
+                </button>
+
+                <a href="{{ path('auth_discord_start') }}" class="btn btn-lg btn-primary" type="submit">
+                    Sign in by Discord
+                </a>
+            {% endif %}
+        </form>
+    {% endif %}
+{% endblock %}
